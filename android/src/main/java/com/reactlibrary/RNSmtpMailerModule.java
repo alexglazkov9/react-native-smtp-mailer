@@ -26,7 +26,8 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.Multipart;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.BodyPart;   
+import javax.mail.BodyPart;
+import javax.mail.MessagingException;   
 
 import java.security.Security;   
 import java.security.AccessController;
@@ -118,7 +119,7 @@ class MailSender extends javax.mail.Authenticator {
 
     public synchronized void sendMail(String subject, String body, String sender, String recipients,
     ReadableArray attachmentPaths, ReadableArray attachmentNames, ReadableArray attachmentTypes) throws Exception {   
-        MimeMessage message = new MimeMessage(session);
+        MimeMessage message = new CoiMimeMessage(session);
         Transport transport = session.getTransport();
         BodyPart messageBodyPart = new MimeBodyPart(); 
 
@@ -174,4 +175,18 @@ class JSSEProvider extends Provider {
           }
       });
     }
+}
+
+class CoiMimeMessage extends MimeMessage {
+  private static final String coiPrefix = "<coi$";
+
+  public CoiMimeMessage(Session session){
+    super(session);
+  }
+
+  @Override
+  protected void updateMessageID() throws MessagingException {
+    super.updateMessageID();
+    setHeader("Message-Id", coiPrefix + getHeader("Message-Id")[0].substring(1));
+  }
 }
